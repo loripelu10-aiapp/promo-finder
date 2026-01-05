@@ -1,0 +1,30 @@
+services:
+  # Backend API
+  - type: web
+    name: promo-finder-api
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    healthCheckPath: /
+
+  # Frontend (Static Site)
+  - type: web
+    name: promo-finder-frontend
+    env: static
+    region: frankfurt
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: promo-finder-api
+          envVarKey: RENDER_EXTERNAL_URL
