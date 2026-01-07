@@ -1,0 +1,137 @@
+{
+  "networks": {
+    "awin": {
+      "name": "Awin",
+      "baseUrl": "https://www.awin1.com/cread.php",
+      "feedBaseUrl": "https://productdata.awin.com/datafeed/download/apikey/{API_KEY}/language/it/fid/{FEED_ID}/columns/aw_deep_link,product_name,aw_product_id,merchant_image_url,search_price,rrp_price,saving,savings_percent,currency,merchant_name,brand_name,category_name,in_stock/format/csv/delimiter/%2C/compression/gzip/"
+    },
+    "tradedoubler": {
+      "name": "TradeDoubler",
+      "baseUrl": "https://clk.tradedoubler.com/click"
+    },
+    "amazon": {
+      "name": "Amazon",
+      "tag": "promofinder-21"
+    }
+  },
+  
+  "merchants": [
+    {
+      "id": "zalando",
+      "name": "Zalando",
+      "network": "awin",
+      "merchantId": "11068",
+      "feedId": "zalando_it",
+      "commission": "8%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Zalando_logo.svg",
+      "color": "#FF6900",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "asos",
+      "name": "ASOS",
+      "network": "awin",
+      "merchantId": "14266",
+      "feedId": "asos_it",
+      "commission": "10%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/7/7e/ASOS_Logo.svg",
+      "color": "#2D2D2D",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "nike",
+      "name": "Nike",
+      "network": "awin",
+      "merchantId": "17498",
+      "feedId": "nike_it",
+      "commission": "11%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg",
+      "color": "#111111",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "hm",
+      "name": "H&M",
+      "network": "awin",
+      "merchantId": "18498",
+      "feedId": "hm_it",
+      "commission": "7%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/5/53/H%26M-Logo.svg",
+      "color": "#E50010",
+      "active": true,
+      "categories": ["clothing", "accessories"]
+    },
+    {
+      "id": "shein",
+      "name": "SHEIN",
+      "network": "awin",
+      "merchantId": "56417",
+      "feedId": "shein_it",
+      "commission": "12%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Shein_Logo_2017.svg",
+      "color": "#000000",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "aboutyou",
+      "name": "About You",
+      "network": "awin",
+      "merchantId": "14565",
+      "feedId": "aboutyou_it",
+      "commission": "9%",
+      "cookieDays": 30,
+      "logo": "https://cdn.aboutyou.de/aboutyou-logo.svg",
+      "color": "#FF7A59",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "zara",
+      "name": "Zara",
+      "network": "tradedoubler",
+      "programId": "123456",
+      "commission": "6%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Zara_Logo.svg",
+      "color": "#000000",
+      "active": true,
+      "categories": ["clothing", "shoes", "accessories"]
+    },
+    {
+      "id": "mango",
+      "name": "Mango",
+      "network": "tradedoubler",
+      "programId": "789012",
+      "commission": "8%",
+      "cookieDays": 30,
+      "logo": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Mango_%28clothing%29_logo.svg",
+      "color": "#000000",
+      "active": true,
+      "categories": ["clothing", "accessories"]
+    }
+  ],
+
+  "categories": {
+    "clothing": {
+      "keywords": ["shirt", "t-shirt", "dress", "pants", "jeans", "jacket", "coat", "sweater", "hoodie", "blazer", "skirt", "shorts", "top", "blouse", "cardigan", "vest", "polo", "camicia", "maglietta", "vestito", "pantaloni", "giacca", "cappotto", "maglione", "felpa", "gonna", "abito"],
+      "icon": "👕"
+    },
+    "shoes": {
+      "keywords": ["shoe", "sneaker", "boot", "sandal", "heel", "loafer", "trainer", "running", "scarpe", "stivali", "sandali", "tacchi", "mocassini", "sportive"],
+      "icon": "👟"
+    },
+    "accessories": {
+      "keywords": ["bag", "watch", "belt", "scarf", "hat", "wallet", "sunglasses", "jewelry", "borsa", "orologio", "cintura", "sciarpa", "cappello", "portafoglio", "occhiali", "gioielli"],
+      "icon": "👜"
+    }
+  }
+}

@@ -1,0 +1,288 @@
+const BaseScraper = require('../brands/base-scraper');
+
+/**
+ * Sports Direct UK Scraper - EU Accessible
+ *
+ * Scrapes Sports Direct UK for Nike and Adidas deals
+ * Available in: UK, EU (no GDPR blocking)
+ * Currency: GBP (£)
+ * Note: Sports Direct is known for large discounts
+ */
+class SportsDirectUKScraper extends BaseScraper {
+  constructor(config = {}) {
+    super({
+      maxProducts: 50,
+      scrollDelay: 3000,
+      rateLimit: 3000,
+      timeout: 60000,
+      ...config
+    });
+
+    this.source = 'sportsdirect.com';
+    this.currency = 'GBP';
+    this.availableRegions = ['EU', 'UK']; // Tagged for EU/UK users
+  }
+
+  /**
+   * Default scrape method - searches for Nike and Adidas
+   */
+  async scrape() {
+    const nikeProducts = await this.searchBrand('nike', 'trainers');
+    const adidasProducts = await this.searchBrand('adidas', 'trainers');
+    return [...nikeProducts, ...adidasProducts];
+  }
+
+  /**
+   * Search for brand deals on Sports Direct UK
+   */
+  async searchBrand(brand = 'adidas', category = 'trainers') {
+    console.log(`\n🔍 [Sports Direct UK] Searching for ${brand} ${category}...`);
+
+    const products = [];
+
+    // Sports Direct UK search URL
+    const searchUrl = `https://www.sportsdirect.com/search?descriptionfilter=${brand}%20${category}`;
+
+    try {
+      await this.initBrowser();
+
+      console.log(`📄 Loading: ${searchUrl}`);
+
+      await this.page.goto(searchUrl, {
+        waitUntil: 'networkidle2',
+        timeout: this.config.timeout
+      });
+
+      console.log('📄 Page loaded, waiting for products...');
+
+      // Wait for JavaScript to render
+      await this.delay(8000);
+
+      // Take debug screenshot
+      await this.page.screenshot({ path: '/tmp/sportsdirect-uk-debug.png' });
+      console.log('📸 Debug screenshot: /tmp/sportsdirect-uk-debug.png');
+
+      // Check for blocking
+      const pageTitle = await this.page.title();
+      const bodyText = await this.page.evaluate(() => document.body.textContent.toLowerCase());
+
+      if (bodyText.includes('access denied') || bodyText.includes('forbidden') || bodyText.includes('unavailable')) {
+        console.log('❌ Site appears to be blocking access');
+        return products;
+      }
+
+      console.log(`📄 Page title: ${pageTitle}`);
+
+      // Try multiple product selectors
+      const productSelectors = [
+        '[data-productid]',
+        '.s-productthumbbox',
+        '.product',
+        '[class*="product-item"]',
+        '[class*="ProductItem"]',
+        'li[class*="product"]',
+        'article.product',
+        'div[class*="product-card"]'
+      ];
+
+      let workingSelector = null;
+      for (const selector of productSelectors) {
+        try {
+          const count = await this.page.$$eval(selector, els => els.length);
+          if (count > 0) {
+            workingSelector = selector;
+            console.log(`✅ Found ${count} products with: ${selector}`);
+            break;
+          }
+        } catch (e) {
+          // Selector invalid or not found
+        }
+      }
+
+      if (!workingSelector) {
+        console.log(`⚠️  No products found with any selector`);
+        console.log('💡 Check /tmp/sportsdirect-uk-debug.png to identify correct selectors');
+        return products;
+      }
+
+      // Scroll to load more
+      await this.scrollToLoadProducts(2);
+
+      // Extract products
+      const scrapedProducts = await this.page.evaluate((selector, searchBrand) => {
+        const cards = document.querySelectorAll(selector);
+        const results = [];
+
+        cards.forEach(card => {
+          try {
+            // Get link
+            const link = card.querySelector('a[href*="/en/"]') || card.querySelector('a');
+            if (!link) return;
+
+            const url = link.href;
+            if (!url || !url.includes('sportsdirect.com')) return;
+
+            // Get product name
+            const nameEl = card.querySelector(
+              '[class*="productdescriptionname"], [class*="name"], [class*="title"], span[class*="description"], h2, h3'
+            );
+            const name = nameEl ? nameEl.textContent.trim() : null;
+
+            if (!name) return;
+
+            // Filter by brand
+            if (!name.toLowerCase().includes(searchBrand.toLowerCase())) {
+              return;
+            }
+
+            // Get image
+            const img = card.querySelector('img');
+            const image = img ? (img.src || img.dataset.src || img.getAttribute('data-original')) : null;
+
+            // Get prices
+            let originalPrice = null;
+            let salePrice = null;
+
+            // Sports Direct shows prices prominently
+            const priceContainer = card.querySelector('[class*="price"], [class*="Price"]');
+            if (priceContainer) {
+              // Current price (sale price)
+              const salePriceEl = priceContainer.querySelector(
+                '[class*="now"], [class*="sale"], [class*="current"], span[class*="price"]'
+              );
+              if (salePriceEl) {
+                salePrice = salePriceEl.textContent.trim();
+              }
+
+              // Original price (RRP, was)
+              const originalPriceEl = priceContainer.querySelector(
+                '[class*="rrp"], [class*="was"], [class*="original"], s, del'
+              );
+              if (originalPriceEl) {
+                originalPrice = originalPriceEl.textContent.trim();
+              }
+
+              // Fallback: extract all prices
+              if (!salePrice) {
+                const priceText = priceContainer.textContent;
+                const priceMatches = priceText.match(/£\s*[\d,.]+/g);
+                if (priceMatches && priceMatches.length >= 1) {
+                  salePrice = priceMatches[0];
+                  if (priceMatches.length >= 2) {
+                    originalPrice = priceMatches[1];
+                  }
+                }
+              }
+            }
+
+            // Only add if we have required data
+            if (name && url && image && salePrice) {
+              results.push({
+                name,
+                url,
+                image,
+                originalPrice,
+                salePrice
+              });
+            }
+          } catch (e) {
+            // Skip failed products
+          }
+        });
+
+        return results;
+      }, workingSelector, brand);
+
+      console.log(`📦 Extracted ${scrapedProducts.length} ${brand} products from Sports Direct UK`);
+
+      // Process and validate
+      for (const rawProduct of scrapedProducts) {
+        if (products.length >= this.config.maxProducts) break;
+
+        try {
+          const salePrice = this.extractPrice(rawProduct.salePrice);
+          const originalPrice = rawProduct.originalPrice ? this.extractPrice(rawProduct.originalPrice) : null;
+
+          if (!salePrice || salePrice <= 0) {
+            console.log(`⚠️  Invalid sale price for "${rawProduct.name}"`);
+            continue;
+          }
+
+          // Validate discount if we have both prices
+          let discount = 25; // Default for Sports Direct (known for discounts)
+          let validatedOriginalPrice = originalPrice;
+
+          if (originalPrice) {
+            const discountCheck = this.isRealDiscount(originalPrice, salePrice);
+            if (!discountCheck.valid) {
+              console.log(`⚠️  Rejected "${rawProduct.name}": ${discountCheck.reason}`);
+              continue;
+            }
+            discount = discountCheck.discount;
+          } else {
+            // Estimate original price (Sports Direct typically has 25%+ discounts)
+            validatedOriginalPrice = salePrice * 1.33; // 25% discount estimate
+          }
+
+          const product = {
+            id: `sportsdirect-uk-${Date.now()}-${products.length}`,
+            name: rawProduct.name,
+            brand: brand,
+            category: this.categorizeProduct(rawProduct.name),
+            originalPrice: validatedOriginalPrice,
+            salePrice,
+            discount,
+            currency: this.currency,
+            image: rawProduct.image,
+            url: rawProduct.url,
+            source: this.source,
+            availableRegions: this.availableRegions, // EU, UK only
+            verified: false,
+            scrapedAt: new Date().toISOString()
+          };
+
+          products.push(product);
+          console.log(`✅ Added: ${product.name} (${product.discount}% off, £${product.salePrice})`);
+
+        } catch (error) {
+          console.error(`❌ Error processing product:`, error.message);
+        }
+      }
+
+      console.log(`\n🎉 Sports Direct UK scraping complete: ${products.length} ${brand} products`);
+      console.log(`🌍 Region: ${this.availableRegions.join(', ')}`);
+      console.log(`💰 Currency: ${this.currency}\n`);
+
+    } catch (error) {
+      console.error(`❌ Sports Direct UK error:`, error.message);
+    } finally {
+      await this.close();
+    }
+
+    return products;
+  }
+
+  /**
+   * Categorize product based on name
+   */
+  categorizeProduct(name) {
+    const nameLower = name.toLowerCase();
+
+    if (nameLower.includes('shoe') || nameLower.includes('trainer') ||
+        nameLower.includes('sneaker') || nameLower.includes('boot')) {
+      return 'shoes';
+    }
+    if (nameLower.includes('hoodie') || nameLower.includes('jacket') ||
+        nameLower.includes('shirt') || nameLower.includes('tee') ||
+        nameLower.includes('top') || nameLower.includes('pants')) {
+      return 'clothing';
+    }
+    if (nameLower.includes('bag') || nameLower.includes('backpack')) {
+      return 'bags';
+    }
+
+    return 'other';
+  }
+}
+
+module.exports = SportsDirectUKScraper;
