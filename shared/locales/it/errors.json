@@ -1,0 +1,9 @@
+{
+  "network": "Errore di rete. Controlla la connessione.",
+  "server": "Errore del server. Riprova più tardi.",
+  "notFound": "Risorsa non trovata.",
+  "unauthorized": "Accesso non autorizzato.",
+  "badRequest": "Richiesta non valida.",
+  "timeout": "Richiesta scaduta. Riprova.",
+  "generic": "Qualcosa è andato storto. Riprova."
+}

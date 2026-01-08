@@ -1,0 +1,81 @@
+# Ignore node_modules in Docker builds (installed during build)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build outputs (frontend will be built in container)
+dist/
+build/
+*.tsbuildinfo
+
+# Test files
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+__tests__/
+test/
+tests/
+
+# Documentation
+*.md
+docs/
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+.temp/
+*.tmp
+
+# Cache
+.cache/
+.eslintcache
+.stylelintcache
+
+# Backend specific ignores
+backend/node_modules/
+backend/cache/*.json
+backend/data/*.json
+backend/logs/
+
+# Frontend specific ignores
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Infrastructure files not needed in container
+infrastructure/
+scripts/
+backups/
+
+# OS files
+Thumbs.db
+.DS_Store

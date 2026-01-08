@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database (for future use with Prisma)
+  postgres:
+    image: postgres:16-alpine
+    container_name: promo-finder-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: promofinder
+      POSTGRES_USER: promofinder
+      POSTGRES_PASSWORD: promofinder_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promofinder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: promo-finder-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass promofinder_redis_password
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: promo-finder-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://promofinder:promofinder_dev_password@postgres:5432/promofinder
+      REDIS_URL: redis://:promofinder_redis_password@redis:6379
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY:-your_rapidapi_key_here}
+      RAINFOREST_API_KEY: ${RAINFOREST_API_KEY:-your_rainforest_key_here}
+      DEEPL_API_KEY: ${DEEPL_API_KEY:-your_deepl_key_here}
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY:-your_claude_key_here}
+      FRONTEND_URL: http://localhost:3000
+    volumes:
+      - ../../backend:/app
+      - /app/node_modules
+      - backend_cache:/app/cache
+      - backend_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend (Development)
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infrastructure/docker/Dockerfile.frontend
+      args:
+        VITE_API_URL: http://localhost:3001
+    container_name: promo-finder-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_cache:
+    driver: local
+  backend_data:
+    driver: local
+
+networks:
+  default:
+    name: promo-finder-network

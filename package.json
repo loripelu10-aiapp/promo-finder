@@ -10,10 +10,19 @@
     "start": "cd backend && npm start",
     "build": "cd frontend && npm run build"
   },
-  "keywords": ["fashion", "deals", "scraper", "aggregator"],
+  "keywords": [
+    "fashion",
+    "deals",
+    "scraper",
+    "aggregator"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^7.2.0",
+    "dotenv": "^17.2.3"
   }
 }

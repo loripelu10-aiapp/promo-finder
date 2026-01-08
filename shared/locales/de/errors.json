@@ -1,0 +1,9 @@
+{
+  "network": "Netzwerkfehler. Überprüfen Sie Ihre Verbindung.",
+  "server": "Serverfehler. Versuchen Sie es später.",
+  "notFound": "Ressource nicht gefunden.",
+  "unauthorized": "Unbefugter Zugriff.",
+  "badRequest": "Ungültige Anfrage.",
+  "timeout": "Zeitüberschreitung. Versuchen Sie es erneut.",
+  "generic": "Etwas ist schief gelaufen. Versuchen Sie es erneut."
+}

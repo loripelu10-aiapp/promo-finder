@@ -1,0 +1,17 @@
+{
+  "category": {
+    "all": "Tous les Produits",
+    "clothing": "Vêtements",
+    "shoes": "Chaussures",
+    "accessories": "Accessoires"
+  },
+  "brand": "Marque",
+  "price": "Prix",
+  "discount": "Remise",
+  "available": "Disponible",
+  "outOfStock": "Rupture de Stock",
+  "newArrival": "Nouvelle Arrivée",
+  "saleEnds": "L'offre se termine dans",
+  "freeShipping": "Livraison Gratuite",
+  "limitedQuantity": "Quantité Limitée"
+}

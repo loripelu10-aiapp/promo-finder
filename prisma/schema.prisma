@@ -1,0 +1,269 @@
+// This is your Prisma schema file
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["views", "multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// CORE TABLES
+// ============================================
+
+enum ProductSource {
+  amazon
+  nike
+  zara
+  adidas
+  hm
+  uniqlo
+  mango
+  asos
+  pullbear
+  bershka
+  stradivarius
+  footlocker
+  decathlon
+  manual
+}
+
+enum ProductCategory {
+  shoes
+  clothing
+  accessories
+  bags
+  jewelry
+  watches
+  sunglasses
+  other
+}
+
+enum VerificationStatus {
+  pending
+  success
+  failed
+  quarantined
+}
+
+enum ImageStatus {
+  pending
+  validated
+  broken
+  invalid
+}
+
+enum Region {
+  US        // United States
+  EU        // European Union (general)
+  UK        // United Kingdom
+  IT        // Italy
+  FR        // France
+  DE        // Germany
+  ES        // Spain
+  GLOBAL    // Available worldwide (like Nike)
+}
+
+// Main products table - partitioned by source for scalability
+model Product {
+  id                  String           @id @default(cuid())
+
+  // Basic Info
+  name                String
+  brand               String
+  category            ProductCategory
+  source              ProductSource
+
+  // Pricing
+  originalPrice       Float
+  salePrice           Float
+  discountPercentage  Int
+  currency            String           @default("EUR")
+
+  // Multi-Region Support
+  availableRegions    String[]         @default(["EU"]) // Regions where this deal is accessible
+
+  // URLs and Images
+  productUrl          String
+  imageUrl            String?
+  images              ProductImage[]
+
+  // Verification & Confidence
+  confidenceScore     Int              @default(70)
+  isActive            Boolean          @default(true)
+  isNew               Boolean          @default(false)
+  lastVerifiedAt      DateTime?
+  verificationHistory VerificationHistory[]
+
+  // Metadata
+  attributes          Json?            // Flexible JSONB for size, color, etc.
+  description         String?
+
+  // Analytics
+  viewCount           Int              @default(0)
+  clickCount          Int              @default(0)
+  popularityScore     Float            @default(0)
+  userInteractions    UserInteraction[]
+
+  // Expiration
+  expiresAt           DateTime?
+
+  // Translations
+  translations        Translation[]
+
+  // Timestamps
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  // Indexes for common query patterns
+  @@index([isActive, category, discountPercentage, confidenceScore])
+  @@index([source, isActive])
+  @@index([brand, category])
+  @@index([popularityScore])
+  @@index([createdAt])
+  @@index([expiresAt])
+  @@index([availableRegions]) // For region-based filtering
+  @@map("products")
+}
+
+// Product images table - supports multiple images per product
+model ProductImage {
+  id                  String        @id @default(cuid())
+  productId           String
+  product             Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  imageUrl            String
+  imageStatus         ImageStatus   @default(pending)
+
+  // Image metadata
+  isPrimary           Boolean       @default(false)
+  altText             String?
+  width               Int?
+  height              Int?
+
+  // Validation
+  lastCheckedAt       DateTime?
+  validatedWithClaude Boolean       @default(false)
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@index([productId])
+  @@index([imageStatus])
+  @@map("product_images")
+}
+
+// Multi-language translations
+model Translation {
+  id                  String        @id @default(cuid())
+  productId           String
+  product             Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  language            String        // ISO 639-1 codes: en, it, es, fr, de, pt
+
+  // Translated fields
+  name                String
+  description         String?
+
+  // Translation metadata
+  isAutoTranslated    Boolean       @default(false)
+  translatedBy        String?       // "deepl", "manual", "claude"
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  @@unique([productId, language])
+  @@index([language])
+  @@map("translations")
+}
+
+// Verification history - audit trail for all checks
+model VerificationHistory {
+  id                  String              @id @default(cuid())
+  productId           String
+  product             Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  verificationType    String              // "url", "image", "price", "claude_vision"
+  status              VerificationStatus
+
+  // Check results
+  httpStatus          Int?
+  responseTime        Int?                // milliseconds
+  errorMessage        String?
+  metadata            Json?               // Additional check data
+
+  // Confidence impact
+  previousConfidence  Int
+  newConfidence       Int
+
+  createdAt           DateTime            @default(now())
+
+  @@index([productId, createdAt])
+  @@index([verificationType])
+  @@index([status])
+  @@map("verification_history")
+}
+
+// API usage and cost tracking
+model ApiLog {
+  id                  String        @id @default(cuid())
+
+  provider            String        // "rapidapi", "rainforest", "deepl", "claude"
+  endpoint            String
+
+  // Request/Response
+  requestParams       Json?
+  responseStatus      Int
+  responseTime        Int           // milliseconds
+
+  // Cost tracking
+  creditsUsed         Int           @default(1)
+  estimatedCost       Float?
+
+  // Error tracking
+  success             Boolean       @default(true)
+  errorMessage        String?
+
+  createdAt           DateTime      @default(now())
+
+  @@index([provider, createdAt])
+  @@index([success])
+  @@map("api_logs")
+}
+
+// User interactions for analytics
+model UserInteraction {
+  id                  String        @id @default(cuid())
+  productId           String
+  product             Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  interactionType     String        // "view", "click", "share", "favorite"
+
+  // User context (optional, for analytics)
+  sessionId           String?
+  userAgent           String?
+  referrer            String?
+  country             String?
+  language            String?
+
+  createdAt           DateTime      @default(now())
+
+  @@index([productId, createdAt])
+  @@index([interactionType])
+  @@map("user_interactions")
+}
+
+// ============================================
+// MATERIALIZED VIEWS (Performance Optimization)
+// ============================================
+// Note: Prisma doesn't support materialized views directly
+// These will be created via raw SQL migrations
+// See migrations/xxx_create_materialized_views.sql
+
+// ============================================
+// ENUMS FOR TYPE SAFETY
+// ============================================
+// Already defined above as Prisma enums

@@ -4,24 +4,15 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const { scrapeZalando } = require('./scrapers/zalando');
-const { scrapeAsos } = require('./scrapers/asos');
-const { scrapeHM } = require('./scrapers/hm');
-
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Cache file path
-const CACHE_FILE = path.join(__dirname, 'cache', 'deals.json');
+// Products file path - our scraped products
+const PRODUCTS_FILE = path.join(__dirname, 'data', 'products.json');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Ensure cache directory exists
-if (!fs.existsSync(path.join(__dirname, 'cache'))) {
-  fs.mkdirSync(path.join(__dirname, 'cache'));
-}
 
 // Initialize cache
 let dealsCache = {
@@ -30,88 +21,61 @@ let dealsCache = {
   isRefreshing: false
 };
 
-// Load cache from file on startup
+// Load products from data/products.json on startup
 function loadCache() {
   try {
-    if (fs.existsSync(CACHE_FILE)) {
-      const data = fs.readFileSync(CACHE_FILE, 'utf8');
-      dealsCache = JSON.parse(data);
-      console.log(`📦 Loaded ${dealsCache.data.length} deals from cache`);
+    if (fs.existsSync(PRODUCTS_FILE)) {
+      const data = fs.readFileSync(PRODUCTS_FILE, 'utf8');
+      const products = JSON.parse(data);
+      dealsCache.data = products;
+      dealsCache.lastUpdated = new Date().toISOString();
+      console.log(`📦 Loaded ${products.length} products from data/products.json`);
     } else {
-      console.log('📦 No cache file found, will fetch fresh data');
+      console.log('⚠️ No products.json found, starting with empty data');
     }
   } catch (error) {
-    console.error('❌ Error loading cache:', error.message);
+    console.error('❌ Error loading products:', error.message);
   }
 }
 
-// Save cache to file
-function saveCache() {
-  try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(dealsCache, null, 2));
-    console.log(`💾 Saved ${dealsCache.data.length} deals to cache`);
-  } catch (error) {
-    console.error('❌ Error saving cache:', error.message);
-  }
-}
-
-// Fetch all deals from scrapers
-async function fetchAllDeals() {
-  if (dealsCache.isRefreshing) {
-    console.log('⏳ Refresh already in progress, skipping...');
-    return dealsCache.data;
-  }
-
-  dealsCache.isRefreshing = true;
-  console.log('🔄 Starting to fetch deals from all sources...');
-
-  try {
-    const results = await Promise.allSettled([
-      scrapeZalando(),
-      scrapeAsos(),
-      scrapeHM()
-    ]);
-
-    let allDeals = [];
-
-    results.forEach((result, index) => {
-      const source = ['Zalando', 'ASOS', 'H&M'][index];
-      if (result.status === 'fulfilled') {
-        console.log(`✅ ${source}: ${result.value.length} deals`);
-        allDeals = allDeals.concat(result.value);
-      } else {
-        console.error(`❌ ${source} failed:`, result.reason.message);
-      }
-    });
-
-    // Remove duplicates based on name and price
-    const uniqueDeals = Array.from(
-      new Map(allDeals.map(deal => [`${deal.brand}-${deal.name}-${deal.salePrice}`, deal])).values()
-    );
-
-    dealsCache.data = uniqueDeals;
-    dealsCache.lastUpdated = new Date().toISOString();
-    dealsCache.isRefreshing = false;
-
-    saveCache();
-
-    console.log(`✨ Total unique deals fetched: ${uniqueDeals.length}`);
-    return uniqueDeals;
-
-  } catch (error) {
-    console.error('❌ Error fetching deals:', error);
-    dealsCache.isRefreshing = false;
-    return dealsCache.data; // Return cached data on error
-  }
+// Reload products from file
+function reloadProducts() {
+  console.log('🔄 Reloading products from data/products.json...');
+  loadCache();
+  console.log(`✅ Loaded ${dealsCache.data.length} products`);
+  return dealsCache.data;
 }
 
 // Filter deals based on query parameters
 function filterDeals(deals, filters) {
   let filtered = [...deals];
 
+  // Filter by gender (AI-detected)
+  if (filters.genders && filters.genders.length > 0) {
+    const genderList = filters.genders.split(',');
+    filtered = filtered.filter(deal => genderList.includes(deal.gender));
+  }
+
+  // Filter by retailers
+  if (filters.retailers && filters.retailers.length > 0) {
+    const retailerList = filters.retailers.split(',');
+    filtered = filtered.filter(deal =>
+      retailerList.includes(deal.retailer) ||
+      retailerList.includes(deal.merchantName)
+    );
+  }
+
   // Filter by category
   if (filters.category && filters.category !== 'all') {
     filtered = filtered.filter(deal => deal.category === filters.category);
+  }
+
+  // Filter by smart categories
+  if (filters.smartCategories && filters.smartCategories.length > 0) {
+    const catList = filters.smartCategories.split(',');
+    filtered = filtered.filter(deal =>
+      deal.smartCategories && deal.smartCategories.some(c => catList.includes(c))
+    );
   }
 
   // Filter by minimum discount
@@ -120,7 +84,11 @@ function filterDeals(deals, filters) {
     filtered = filtered.filter(deal => deal.discount >= minDisc);
   }
 
-  // Filter by maximum price
+  // Filter by price range
+  if (filters.minPrice) {
+    const minP = parseFloat(filters.minPrice);
+    filtered = filtered.filter(deal => deal.salePrice >= minP);
+  }
   if (filters.maxPrice) {
     const maxP = parseFloat(filters.maxPrice);
     filtered = filtered.filter(deal => deal.salePrice <= maxP);
@@ -132,12 +100,24 @@ function filterDeals(deals, filters) {
     filtered = filtered.filter(deal => deal.brand.toLowerCase().includes(brandLower));
   }
 
+  // Smart filters (AI-powered)
+  if (filters.bestValue === 'true') {
+    filtered = filtered.filter(deal => deal.bestValue === true);
+  }
+  if (filters.topDeal === 'true') {
+    filtered = filtered.filter(deal => deal.topDeal === true);
+  }
+  if (filters.priceDrop === 'true') {
+    filtered = filtered.filter(deal => deal.priceDrop === true);
+  }
+
   // Search by name
   if (filters.search) {
     const searchLower = filters.search.toLowerCase();
     filtered = filtered.filter(deal =>
       deal.name.toLowerCase().includes(searchLower) ||
-      deal.brand.toLowerCase().includes(searchLower)
+      deal.brand.toLowerCase().includes(searchLower) ||
+      (deal.retailer && deal.retailer.toLowerCase().includes(searchLower))
     );
   }
 
@@ -149,11 +129,35 @@ function filterDeals(deals, filters) {
     filtered.sort((a, b) => b.salePrice - a.salePrice);
   } else if (sortBy === 'discountHigh') {
     filtered.sort((a, b) => b.discount - a.discount);
+  } else if (sortBy === 'dealScore') {
+    filtered.sort((a, b) => (b.dealScore || 0) - (a.dealScore || 0));
   } else if (sortBy === 'newest') {
-    filtered.sort((a, b) => new Date(b.scrapedAt) - new Date(a.scrapedAt));
+    filtered.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
   }
 
   return filtered;
+}
+
+// Get retailer counts
+function getRetailerCounts(deals) {
+  const counts = {};
+  deals.forEach(deal => {
+    const retailer = deal.retailer || deal.merchantName || 'Unknown';
+    counts[retailer] = (counts[retailer] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+// Get gender counts
+function getGenderCounts(deals) {
+  const counts = { men: 0, women: 0, kids: 0, unisex: 0 };
+  deals.forEach(deal => {
+    const gender = deal.gender || 'unisex';
+    counts[gender] = (counts[gender] || 0) + 1;
+  });
+  return counts;
 }
 
 // Routes
@@ -178,19 +182,37 @@ app.get('/api/deals', (req, res) => {
     const filters = {
       category: req.query.category,
       minDiscount: req.query.minDiscount,
+      minPrice: req.query.minPrice,
       maxPrice: req.query.maxPrice,
       brand: req.query.brand,
       search: req.query.search,
-      sortBy: req.query.sortBy
+      sortBy: req.query.sortBy,
+      // New AI-powered filters
+      genders: req.query.genders,
+      retailers: req.query.retailers,
+      smartCategories: req.query.smartCategories,
+      bestValue: req.query.bestValue,
+      topDeal: req.query.topDeal,
+      priceDrop: req.query.priceDrop
     };
 
     const filteredDeals = filterDeals(dealsCache.data, filters);
 
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedDeals = filteredDeals.slice(startIndex, endIndex);
+
     res.json({
       success: true,
       count: filteredDeals.length,
+      page,
+      limit,
+      totalPages: Math.ceil(filteredDeals.length / limit),
       lastUpdated: dealsCache.lastUpdated,
-      deals: filteredDeals
+      deals: paginatedDeals
     });
   } catch (error) {
     console.error('Error in /api/deals:', error);
@@ -202,32 +224,81 @@ app.get('/api/deals', (req, res) => {
   }
 });
 
-// Force refresh deals
-app.get('/api/deals/refresh', async (req, res) => {
+// Get available retailers with counts
+app.get('/api/retailers', (req, res) => {
   try {
-    console.log('🔄 Manual refresh requested');
+    const retailers = getRetailerCounts(dealsCache.data);
+    res.json({
+      success: true,
+      count: retailers.length,
+      retailers
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
-    if (dealsCache.isRefreshing) {
-      return res.status(429).json({
-        success: false,
-        message: 'Refresh already in progress, please wait'
-      });
-    }
+// Get filter options (retailers, genders, categories)
+app.get('/api/filters', (req, res) => {
+  try {
+    const retailers = getRetailerCounts(dealsCache.data);
+    const genders = getGenderCounts(dealsCache.data);
 
-    // Start refresh in background
-    fetchAllDeals().catch(err => console.error('Background refresh error:', err));
+    // Get smart category counts
+    const smartCategories = {};
+    dealsCache.data.forEach(deal => {
+      if (deal.smartCategories) {
+        deal.smartCategories.forEach(cat => {
+          smartCategories[cat] = (smartCategories[cat] || 0) + 1;
+        });
+      }
+    });
+
+    // Get smart filter counts
+    let bestValueCount = 0, topDealCount = 0, priceDropCount = 0;
+    dealsCache.data.forEach(deal => {
+      if (deal.bestValue) bestValueCount++;
+      if (deal.topDeal) topDealCount++;
+      if (deal.priceDrop) priceDropCount++;
+    });
 
     res.json({
       success: true,
-      message: 'Refresh started',
-      note: 'This may take a few moments. Check back soon.'
+      retailers,
+      genders,
+      smartCategories: Object.entries(smartCategories)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count),
+      smartFilters: {
+        bestValue: bestValueCount,
+        topDeal: topDealCount,
+        priceDrop: priceDropCount
+      },
+      priceRange: {
+        min: Math.min(...dealsCache.data.map(d => d.salePrice)),
+        max: Math.max(...dealsCache.data.map(d => d.salePrice))
+      }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
+// Reload products from file
+app.get('/api/deals/refresh', async (req, res) => {
+  try {
+    console.log('🔄 Reload requested');
+    reloadProducts();
+    res.json({
+      success: true,
+      message: 'Products reloaded',
+      count: dealsCache.data.length
+    });
   } catch (error) {
     console.error('Error in /api/deals/refresh:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to refresh deals',
+      error: 'Failed to reload products',
       message: error.message
     });
   }
@@ -237,10 +308,9 @@ app.get('/api/deals/refresh', async (req, res) => {
 app.get('/api/stats', (req, res) => {
   try {
     const stats = {
-      totalDeals: dealsCache.data.length,
+      totalProducts: dealsCache.data.length,
       lastUpdated: dealsCache.lastUpdated,
-      isRefreshing: dealsCache.isRefreshing,
-      bySource: {},
+      byBrand: {},
       byCategory: {},
       avgDiscount: 0
     };
@@ -248,14 +318,15 @@ app.get('/api/stats', (req, res) => {
     // Calculate stats
     let totalDiscount = 0;
     dealsCache.data.forEach(deal => {
-      // By source
-      stats.bySource[deal.source] = (stats.bySource[deal.source] || 0) + 1;
+      // By brand/merchant
+      const brand = deal.merchantName || deal.brand || 'Unknown';
+      stats.byBrand[brand] = (stats.byBrand[brand] || 0) + 1;
 
       // By category
       stats.byCategory[deal.category] = (stats.byCategory[deal.category] || 0) + 1;
 
       // Total discount
-      totalDiscount += deal.discount;
+      totalDiscount += deal.discount || 0;
     });
 
     stats.avgDiscount = dealsCache.data.length > 0
@@ -272,20 +343,17 @@ app.get('/api/stats', (req, res) => {
 app.listen(PORT, async () => {
   console.log(`🚀 PromoFinder API server running on port ${PORT}`);
   console.log(`📍 http://localhost:${PORT}`);
+  console.log('');
 
-  // Load cache on startup
+  // Load products on startup
   loadCache();
 
-  // If cache is empty or old (>2 hours), fetch fresh data
-  const cacheAge = dealsCache.lastUpdated
-    ? Date.now() - new Date(dealsCache.lastUpdated).getTime()
-    : Infinity;
-
-  if (!dealsCache.data.length || cacheAge > 2 * 60 * 60 * 1000) {
-    console.log('🔄 Cache is empty or outdated, fetching fresh data...');
-    fetchAllDeals().catch(err => console.error('Initial fetch error:', err));
+  if (dealsCache.data.length > 0) {
+    console.log(`✅ Ready to serve ${dealsCache.data.length} products!`);
+    console.log('');
   } else {
-    console.log(`✅ Using cached data (${dealsCache.data.length} deals)`);
+    console.log('⚠️  No products loaded - run the scrapers first');
+    console.log('');
   }
 });
 

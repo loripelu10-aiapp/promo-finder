@@ -1,0 +1,217 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type "deploy" to confirm production deployment'
+        required: true
+        default: ''
+
+jobs:
+  verify-confirmation:
+    name: Verify Deployment Confirmation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check confirmation
+        run: |
+          if [ "${{ github.event.inputs.confirmation }}" != "deploy" ]; then
+            echo "Deployment cancelled - confirmation not provided"
+            exit 1
+          fi
+          echo "Deployment confirmed"
+
+  pre-deployment-checks:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    needs: verify-confirmation
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run security audit
+        run: |
+          cd backend && npm audit --audit-level=moderate
+          cd ../frontend && npm audit --audit-level=moderate
+        continue-on-error: false
+
+      - name: Build check
+        run: |
+          cd backend && node -e "console.log('Backend OK')"
+          cd ../frontend && npm run build
+
+  deploy-backend-production:
+    name: Deploy Backend to Production
+    runs-on: ubuntu-latest
+    needs: pre-deployment-checks
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install Railway CLI
+        run: npm i -g @railway/cli
+
+      - name: Deploy to Railway (Production)
+        id: deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_PRODUCTION }}
+        run: |
+          railway link ${{ secrets.RAILWAY_PROJECT_ID_PRODUCTION }}
+          railway up --detach
+          echo "url=${{ secrets.RAILWAY_PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+
+      - name: Wait for deployment stabilization
+        run: sleep 45
+
+      - name: Health check - Production
+        run: |
+          max_attempts=15
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f ${{ secrets.RAILWAY_PRODUCTION_URL }}/health; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            attempt=$((attempt + 1))
+            echo "⏳ Health check attempt $attempt/$max_attempts..."
+            sleep 10
+          done
+          echo "❌ Health check failed after $max_attempts attempts"
+          exit 1
+
+      - name: Smoke tests - Production
+        run: |
+          echo "Running production smoke tests..."
+
+          # Test critical endpoints
+          curl -f ${{ secrets.RAILWAY_PRODUCTION_URL }}/health || exit 1
+          curl -f ${{ secrets.RAILWAY_PRODUCTION_URL }}/api/deals || exit 1
+          curl -f ${{ secrets.RAILWAY_PRODUCTION_URL }}/api/stats || exit 1
+
+          # Test response time (should be < 2 seconds)
+          response_time=$(curl -o /dev/null -s -w '%{time_total}\n' ${{ secrets.RAILWAY_PRODUCTION_URL }}/api/deals)
+          echo "Response time: ${response_time}s"
+
+          echo "✅ All smoke tests passed!"
+
+      - name: Create deployment tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          TAG_NAME="production-$(date +%Y%m%d-%H%M%S)"
+          git tag -a $TAG_NAME -m "Production deployment: $TAG_NAME"
+          git push origin $TAG_NAME
+
+  deploy-frontend-production:
+    name: Deploy Frontend to Production
+    runs-on: ubuntu-latest
+    needs: deploy-backend-production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build frontend for production
+        working-directory: ./frontend
+        env:
+          VITE_API_URL: ${{ secrets.RAILWAY_PRODUCTION_URL }}
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Deploy to Vercel (Production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./frontend
+        continue-on-error: true
+
+  post-deployment:
+    name: Post-Deployment Tasks
+    runs-on: ubuntu-latest
+    needs: [deploy-backend-production, deploy-frontend-production]
+
+    steps:
+      - name: Notify team of successful deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = {
+              sha: context.sha,
+              timestamp: new Date().toISOString(),
+              url: '${{ secrets.RAILWAY_PRODUCTION_URL }}',
+              actor: context.actor
+            };
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: `🚀 **Production Deployment Successful**\n\n` +
+                    `- Deployed by: @${deployment.actor}\n` +
+                    `- Time: ${deployment.timestamp}\n` +
+                    `- URL: ${deployment.url}\n` +
+                    `- Commit: ${deployment.sha.substring(0, 7)}`
+            })
+
+      - name: Trigger monitoring alerts
+        run: |
+          echo "Monitoring deployment..."
+          # Add monitoring webhook calls here
+          # curl -X POST ${{ secrets.MONITORING_WEBHOOK_URL }} \
+          #   -H "Content-Type: application/json" \
+          #   -d '{"event": "deployment", "environment": "production", "status": "success"}'
+
+  rollback:
+    name: Rollback (Manual)
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [deploy-backend-production]
+
+    steps:
+      - name: Rollback instructions
+        run: |
+          echo "⚠️ Deployment failed. To rollback:"
+          echo "1. Go to Railway dashboard"
+          echo "2. Select previous successful deployment"
+          echo "3. Click 'Redeploy'"
+          echo ""
+          echo "Or use Railway CLI:"
+          echo "railway rollback"

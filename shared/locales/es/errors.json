@@ -1,0 +1,9 @@
+{
+  "network": "Error de red. Verifica tu conexión.",
+  "server": "Error del servidor. Intenta más tarde.",
+  "notFound": "Recurso no encontrado.",
+  "unauthorized": "Acceso no autorizado.",
+  "badRequest": "Solicitud inválida.",
+  "timeout": "Tiempo de espera agotado. Intenta de nuevo.",
+  "generic": "Algo salió mal. Intenta de nuevo."
+}

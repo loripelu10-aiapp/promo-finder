@@ -1,0 +1,217 @@
+{
+  "date": "2026-01-07",
+  "totalCalls": 23,
+  "totalInputTokens": 38000,
+  "totalOutputTokens": 11500,
+  "totalImageTokens": 33000,
+  "totalCost": 0.5065000000000002,
+  "calls": [
+    {
+      "timestamp": "2026-01-07T16:59:21.430Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.431Z",
+      "scraper": "Test Scraper",
+      "method": "text",
+      "inputTokens": 5000,
+      "outputTokens": 500,
+      "hasImage": false,
+      "cost": 0.0225
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.457Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.457Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.457Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.458Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.458Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.458Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.459Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.460Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.460Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.460Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.460Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.461Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.461Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.461Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.461Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.462Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.462Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.462Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.463Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.463Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    },
+    {
+      "timestamp": "2026-01-07T16:59:21.463Z",
+      "scraper": "Test Scraper",
+      "method": "screenshot",
+      "inputTokens": 1500,
+      "outputTokens": 500,
+      "hasImage": true,
+      "cost": 0.022
+    }
+  ]
+}

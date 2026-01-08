@@ -443,6 +443,7 @@ export default function PromoFinder() {
 
         .language-selector {
           position: relative;
+          z-index: 20;
         }
 
         .language-btn {
@@ -477,6 +478,7 @@ export default function PromoFinder() {
           min-width: 150px;
           box-shadow: 0 20px 40px rgba(0,0,0,0.5);
           animation: slideDown 0.2s ease;
+          z-index: 50;
         }
 
         @keyframes slideDown {
@@ -492,6 +494,10 @@ export default function PromoFinder() {
           cursor: pointer;
           transition: background 0.2s;
           font-size: 0.9rem;
+        }
+
+        .language-option span {
+          pointer-events: none;
         }
 
         .language-option:hover {
@@ -1070,9 +1076,12 @@ export default function PromoFinder() {
         </div>
         
         <div className="language-selector">
-          <button 
+          <button
             className="language-btn"
-            onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+            onClick={() => {
+              console.log('Language button clicked, current state:', showLanguageMenu);
+              setShowLanguageMenu(!showLanguageMenu);
+            }}
           >
             {languageFlags[language]} {language.toUpperCase()}
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1082,10 +1091,12 @@ export default function PromoFinder() {
           {showLanguageMenu && (
             <div className="language-menu">
               {Object.keys(translations).map(lang => (
-                <div 
+                <div
                   key={lang}
                   className={`language-option ${lang === language ? 'active' : ''}`}
                   onClick={() => {
+                    console.log('Language option clicked:', lang);
+                    console.log('Current language:', language);
                     setLanguage(lang);
                     setShowLanguageMenu(false);
                   }}

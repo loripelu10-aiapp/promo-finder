@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PromoFinder - Live Fashion Deals</title>
+  <meta name="description" content="Trova le migliori offerte moda in tempo reale da Zalando, ASOS, Nike, H&M, Zara e altri top brand">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #ff6b00;
+      --primary-light: #ff8533;
+      --bg: #0a0a0a;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.08);
+      --text: #fff;
+      --text-muted: rgba(255,255,255,0.5);
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background */
+    .bg-pattern {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(255, 107, 0, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(34, 211, 238, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Header */
+    header {
+      padding: 1.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: baseline;
+      gap: 0.25rem;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-accent {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .language-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .language-select option {
+      background: #1a1a1a;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 4rem 0 3rem;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.5rem, 7vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 span {
+      display: block;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light), #ffa366);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto 2rem;
+    }
+
+    /* Search */
+    .search-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.5rem;
+      transition: all 0.3s;
+    }
+
+    .search-box:focus-within {
+      border-color: rgba(255, 107, 0, 0.5);
+      box-shadow: 0 0 0 4px rgba(255, 107, 0, 0.1);
+    }
+
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      padding: 1rem 1.75rem;
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .search-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 107, 0, 0.3);
+    }
+
+    /* Filters */
+    .filters-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 0;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .results-count {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .results-count strong {
+      color: var(--primary);
+    }
+
+    .filters-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn, .sort-select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.65rem 1.25rem;
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover, .sort-select:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .filter-btn.active {
+      background: rgba(255, 107, 0, 0.2);
+      border-color: rgba(255, 107, 0, 0.4);
+    }
+
+    .sort-select option {
+      background: #1a1a1a;
+    }
+
+    /* Categories */
+    .categories {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .category-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-btn:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+    }
+
+    .category-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    /* Filters Panel */
+    .filters-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 2rem;
+    }
+
+    .filters-panel.open {
+      display: grid;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .filter-group h4 {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .filter-group input[type="range"] {
+      width: 100%;
+      accent-color: var(--primary);
+    }
+
+    .range-values {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+    }
+
+    /* Products Grid */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding-bottom: 3rem;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+      animation: cardAppear 0.5s ease both;
+    }
+
+    @keyframes cardAppear {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .product-card:hover {
+      border-color: rgba(255, 107, 0, 0.4);
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .product-image-container {
+      position: relative;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+      overflow: hidden;
+    }
+
+    .product-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s;
+    }
+
+    .product-card:hover .product-image {
+      transform: scale(1.05);
+    }
+
+    .discount-badge {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      padding: 0.4rem 0.7rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      z-index: 2;
+    }
+
+    .discount-badge.hot {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .merchant-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.7);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      z-index: 2;
+      backdrop-filter: blur(4px);
+    }
+
+    .product-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .product-card:hover .product-overlay {
+      opacity: 1;
+    }
+
+    .view-deal-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fff;
+      color: #000;
+      padding: 0.9rem 1.4rem;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transform: translateY(10px);
+      transition: all 0.3s;
+    }
+
+    .product-card:hover .view-deal-btn {
+      transform: translateY(0);
+    }
+
+    .view-deal-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .product-info {
+      padding: 1.25rem;
+    }
+
+    .product-brand {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .product-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin: 0.4rem 0;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-pricing {
+      display: flex;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin: 0.5rem 0;
+    }
+
+    .current-price {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .original-price {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .product-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 2rem;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading p {
+      margin-top: 1.5rem;
+      color: var(--text-muted);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 2rem 0;
+      }
+
+      .search-box {
+        flex-direction: column;
+      }
+
+      .search-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .product-info {
+        padding: 0.75rem;
+      }
+
+      .product-name {
+        font-size: 0.85rem;
+      }
+
+      .current-price {
+        font-size: 1rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <span class="logo-text">PROMO</span>
+        <span class="logo-text logo-accent">FINDER</span>
+      </div>
+      <select class="language-select" id="languageSelect">
+        <option value="en">🇬🇧 EN</option>
+        <option value="it">🇮🇹 IT</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="de">🇩🇪 DE</option>
+        <option value="pt">🇵🇹 PT</option>
+      </select>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>
+        <span id="heroTitle">Live Deals</span>
+        Trending Now
+      </h1>
+      <p id="heroSubtitle">Real-time fashion deals from top brands</p>
+
+      <div class="search-container">
+        <div class="search-box">
+          <input 
+            type="text" 
+            class="search-input" 
+            id="searchInput"
+            placeholder="Search brands, styles, products..."
+          >
+          <button class="search-btn" id="searchBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <span id="searchBtnText">Search</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <div class="categories" id="categories">
+      <button class="category-btn active" data-category="all">All</button>
+      <button class="category-btn" data-category="clothing">👕 Clothing</button>
+      <button class="category-btn" data-category="shoes">👟 Shoes</button>
+      <button class="category-btn" data-category="accessories">👜 Accessories</button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+      <div class="results-count">
+        <strong id="resultsCount">0</strong> <span id="resultsText">deals found</span>
+      </div>
+      <div class="filters-actions">
+        <button class="filter-btn" id="filtersToggle">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 6px;">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+          </svg>
+          <span id="filtersText">Filters</span>
+        </button>
+        <select class="sort-select" id="sortSelect">
+          <option value="discount">Biggest Discount</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="newest">Newest</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel" id="filtersPanel">
+      <div class="filter-group">
+        <h4 id="priceRangeLabel">Price Range</h4>
+        <input type="range" id="maxPriceRange" min="0" max="500" value="500">
+        <div class="range-values">
+          <span>€0</span>
+          <span id="maxPriceValue">€500</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4 id="minDiscountLabel">Min. Discount</h4>
+        <input type="range" id="minDiscountRange" min="0" max="80" value="0">
+        <div class="range-values">
+          <span id="minDiscountValue">0%</span>
+        </div>
+      </div>
+      <div class="filter-group">
+        <h4 id="merchantLabel">Merchant</h4>
+        <select class="sort-select" id="merchantSelect" style="width: 100%;">
+          <option value="">All Merchants</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div id="productsContainer">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p id="loadingText">Loading deals...</p>
+      </div>
+      <div class="products-grid" id="productsGrid" style="display: none;"></div>
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <p id="emptyText">No deals found. Try a different search.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>PromoFinder © 2025 - Real-time fashion deals aggregator</p>
+    </footer>
+  </div>
+
+  <script>
+    // ============================================
+    // TRANSLATIONS
+    // ============================================
+    const translations = {
+      en: {
+        heroTitle: 'Live Deals',
+        heroSubtitle: 'Real-time fashion deals from top brands',
+        searchPlaceholder: 'Search brands, styles, products...',
+        searchBtn: 'Search',
+        all: 'All',
+        clothing: '👕 Clothing',
+        shoes: '👟 Shoes',
+        accessories: '👜 Accessories',
+        dealsFound: 'deals found',
+        filters: 'Filters',
+        priceRange: 'Price Range',
+        minDiscount: 'Min. Discount',
+        merchant: 'Merchant',
+        allMerchants: 'All Merchants',
+        biggestDiscount: 'Biggest Discount',
+        priceLowHigh: 'Price: Low to High',
+        priceHighLow: 'Price: High to Low',
+        newest: 'Newest',
+        loading: 'Loading deals...',
+        noDeals: 'No deals found. Try a different search.',
+        viewDeal: 'View Deal',
+        was: 'Was'
+      },
+      it: {
+        heroTitle: 'Offerte Live',
+        heroSubtitle: 'Offerte moda in tempo reale dai top brand',
+        searchPlaceholder: 'Cerca brand, stili, prodotti...',
+        searchBtn: 'Cerca',
+        all: 'Tutto',
+        clothing: '👕 Abbigliamento',
+        shoes: '👟 Scarpe',
+        accessories: '👜 Accessori',
+        dealsFound: 'offerte trovate',
+        filters: 'Filtri',
+        priceRange: 'Fascia di Prezzo',
+        minDiscount: 'Sconto Min.',
+        merchant: 'Negozio',
+        allMerchants: 'Tutti i Negozi',
+        biggestDiscount: 'Sconto Maggiore',
+        priceLowHigh: 'Prezzo: Crescente',
+        priceHighLow: 'Prezzo: Decrescente',
+        newest: 'Più Recenti',
+        loading: 'Caricamento offerte...',
+        noDeals: 'Nessuna offerta trovata. Prova una ricerca diversa.',
+        viewDeal: 'Vai all\'Offerta',
+        was: 'Era'
+      },
+      es: {
+        heroTitle: 'Ofertas Live',
+        heroSubtitle: 'Ofertas de moda en tiempo real de las mejores marcas',
+        searchPlaceholder: 'Buscar marcas, estilos, productos...',
+        searchBtn: 'Buscar',
+        all: 'Todo',
+        clothing: '👕 Ropa',
+        shoes: '👟 Zapatos',
+        accessories: '👜 Accesorios',
+        dealsFound: 'ofertas encontradas',
+        filters: 'Filtros',
+        priceRange: 'Rango de Precio',
+        minDiscount: 'Descuento Mín.',
+        merchant: 'Tienda',
+        allMerchants: 'Todas las Tiendas',
+        biggestDiscount: 'Mayor Descuento',
+        priceLowHigh: 'Precio: Menor a Mayor',
+        priceHighLow: 'Precio: Mayor a Menor',
+        newest: 'Más Recientes',
+        loading: 'Cargando ofertas...',
+        noDeals: 'No se encontraron ofertas. Intenta otra búsqueda.',
+        viewDeal: 'Ver Oferta',
+        was: 'Antes'
+      },
+      fr: {
+        heroTitle: 'Offres Live',
+        heroSubtitle: 'Offres mode en temps réel des meilleures marques',
+        searchPlaceholder: 'Rechercher marques, styles, produits...',
+        searchBtn: 'Rechercher',
+        all: 'Tout',
+        clothing: '👕 Vêtements',
+        shoes: '👟 Chaussures',
+        accessories: '👜 Accessoires',
+        dealsFound: 'offres trouvées',
+        filters: 'Filtres',
+        priceRange: 'Gamme de Prix',
+        minDiscount: 'Remise Min.',
+        merchant: 'Marchand',
+        allMerchants: 'Tous les Marchands',
+        biggestDiscount: 'Plus Grande Remise',
+        priceLowHigh: 'Prix: Croissant',
+        priceHighLow: 'Prix: Décroissant',
+        newest: 'Plus Récents',
+        loading: 'Chargement des offres...',
+        noDeals: 'Aucune offre trouvée. Essayez une autre recherche.',
+        viewDeal: 'Voir l\'Offre',
+        was: 'Était'
+      },
+      de: {
+        heroTitle: 'Live Angebote',
+        heroSubtitle: 'Mode-Angebote in Echtzeit von Top-Marken',
+        searchPlaceholder: 'Marken, Stile, Produkte suchen...',
+        searchBtn: 'Suchen',
+        all: 'Alle',
+        clothing: '👕 Kleidung',
+        shoes: '👟 Schuhe',
+        accessories: '👜 Accessoires',
+        dealsFound: 'Angebote gefunden',
+        filters: 'Filter',
+        priceRange: 'Preisbereich',
+        minDiscount: 'Min. Rabatt',
+        merchant: 'Händler',
+        allMerchants: 'Alle Händler',
+        biggestDiscount: 'Größter Rabatt',
+        priceLowHigh: 'Preis: Aufsteigend',
+        priceHighLow: 'Preis: Absteigend',
+        newest: 'Neueste',
+        loading: 'Angebote laden...',
+        noDeals: 'Keine Angebote gefunden. Versuchen Sie eine andere Suche.',
+        viewDeal: 'Zum Angebot',
+        was: 'War'
+      },
+      pt: {
+        heroTitle: 'Ofertas Live',
+        heroSubtitle: 'Ofertas de moda em tempo real das melhores marcas',
+        searchPlaceholder: 'Pesquisar marcas, estilos, produtos...',
+        searchBtn: 'Pesquisar',
+        all: 'Tudo',
+        clothing: '👕 Roupas',
+        shoes: '👟 Sapatos',
+        accessories: '👜 Acessórios',
+        dealsFound: 'ofertas encontradas',
+        filters: 'Filtros',
+        priceRange: 'Faixa de Preço',
+        minDiscount: 'Desconto Mín.',
+        merchant: 'Loja',
+        allMerchants: 'Todas as Lojas',
+        biggestDiscount: 'Maior Desconto',
+        priceLowHigh: 'Preço: Menor para Maior',
+        priceHighLow: 'Preço: Maior para Menor',
+        newest: 'Mais Recentes',
+        loading: 'Carregando ofertas...',
+        noDeals: 'Nenhuma oferta encontrada. Tente outra pesquisa.',
+        viewDeal: 'Ver Oferta',
+        was: 'Era'
+      }
+    };
+
+    // ============================================
+    // STATE
+    // ============================================
+    let currentLang = 'en';
+    let currentCategory = 'all';
+    let currentSearch = '';
+    let currentSort = 'discount';
+    let maxPrice = 500;
+    let minDiscount = 0;
+    let currentMerchant = '';
+    let products = [];
+    let merchants = [];
+
+    // ============================================
+    // API
+    // ============================================
+    const API_BASE = window.location.origin + '/api';
+
+    async function fetchProducts() {
+      const params = new URLSearchParams({
+        category: currentCategory !== 'all' ? currentCategory : '',
+        search: currentSearch,
+        sortBy: currentSort === 'price-asc' || currentSort === 'price-desc' ? 'price' : currentSort,
+        sortOrder: currentSort === 'price-asc' ? 'asc' : 'desc',
+        maxPrice: maxPrice,
+        minDiscount: minDiscount,
+        merchant: currentMerchant,
+        limit: 100
+      });
+
+      try {
+        const response = await fetch(`${API_BASE}/products?${params}`);
+        const data = await response.json();
+        return data.success ? data.data.products : [];
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        return [];
+      }
+    }
+
+    async function fetchMerchants() {
+      try {
+        const response = await fetch(`${API_BASE}/merchants`);
+        const data = await response.json();
+        return data.success ? data.data : [];
+      } catch (error) {
+        console.error('Error fetching merchants:', error);
+        return [];
+      }
+    }
+
+    // ============================================
+    // RENDER
+    // ============================================
+    function renderProducts() {
+      const grid = document.getElementById('productsGrid');
+      const loading = document.getElementById('loading');
+      const empty = document.getElementById('emptyState');
+      const t = translations[currentLang];
+
+      if (products.length === 0) {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        document.getElementById('emptyText').textContent = t.noDeals;
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.style.display = 'grid';
+
+      grid.innerHTML = products.map((product, index) => `
+        <div class="product-card" style="animation-delay: ${index * 0.05}s">
+          <div class="product-image-container">
+            <div class="discount-badge ${product.discount >= 50 ? 'hot' : ''}">
+              -${product.discount}%
+            </div>
+            <div class="merchant-badge">${product.merchantName}</div>
+            <img 
+              src="${product.image}" 
+              alt="${product.name}"
+              class="product-image"
+              loading="lazy"
+              onerror="this.src='https://via.placeholder.com/400x400/1a1a1a/666?text=No+Image'"
+            >
+            <div class="product-overlay">
+              <a 
+                href="${product.affiliateUrl || product.originalUrl}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                class="view-deal-btn"
+              >
+                ${t.viewDeal}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M7 17L17 7M17 7H7M17 7V17"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div class="product-info">
+            <span class="product-brand">${product.brand}</span>
+            <h3 class="product-name">${product.name}</h3>
+            <div class="product-pricing">
+              <span class="current-price">€${product.salePrice.toFixed(2)}</span>
+              <span class="original-price">${t.was} €${product.originalPrice.toFixed(2)}</span>
+            </div>
+            <div class="product-meta">
+              <span class="live-dot"></span>
+              ${product.merchantName} • ${product.commission}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('resultsCount').textContent = products.length;
+    }
+
+    function renderMerchants() {
+      const select = document.getElementById('merchantSelect');
+      const t = translations[currentLang];
+      
+      select.innerHTML = `<option value="">${t.allMerchants}</option>` +
+        merchants.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    }
+
+    function updateLanguage() {
+      const t = translations[currentLang];
+      
+      document.getElementById('heroTitle').textContent = t.heroTitle;
+      document.getElementById('heroSubtitle').textContent = t.heroSubtitle;
+      document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+      document.getElementById('searchBtnText').textContent = t.searchBtn;
+      document.getElementById('resultsText').textContent = t.dealsFound;
+      document.getElementById('filtersText').textContent = t.filters;
+      document.getElementById('priceRangeLabel').textContent = t.priceRange;
+      document.getElementById('minDiscountLabel').textContent = t.minDiscount;
+      document.getElementById('merchantLabel').textContent = t.merchant;
+      document.getElementById('loadingText').textContent = t.loading;
+      document.getElementById('emptyText').textContent = t.noDeals;
+
+      // Categories
+      const categories = document.querySelectorAll('.category-btn');
+      const catLabels = [t.all, t.clothing, t.shoes, t.accessories];
+      categories.forEach((btn, i) => btn.textContent = catLabels[i]);
+
+      // Sort
+      const sortSelect = document.getElementById('sortSelect');
+      sortSelect.innerHTML = `
+        <option value="discount">${t.biggestDiscount}</option>
+        <option value="price-asc">${t.priceLowHigh}</option>
+        <option value="price-desc">${t.priceHighLow}</option>
+        <option value="newest">${t.newest}</option>
+      `;
+
+      renderMerchants();
+      renderProducts();
+    }
+
+    // ============================================
+    // LOAD DATA
+    // ============================================
+    async function loadData() {
+      const loading = document.getElementById('loading');
+      const grid = document.getElementById('productsGrid');
+      
+      loading.style.display = 'flex';
+      grid.style.display = 'none';
+
+      // Load merchants first
+      merchants = await fetchMerchants();
+      renderMerchants();
+
+      // Load products
+      products = await fetchProducts();
+      
+      loading.style.display = 'none';
+      renderProducts();
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    
+    // Language
+    document.getElementById('languageSelect').addEventListener('change', (e) => {
+      currentLang = e.target.value;
+      updateLanguage();
+    });
+
+    // Search
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      currentSearch = document.getElementById('searchInput').value;
+      loadData();
+    });
+
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        currentSearch = e.target.value;
+        loadData();
+      }
+    });
+
+    // Categories
+    document.querySelectorAll('.category-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.dataset.category;
+        loadData();
+      });
+    });
+
+    // Filters toggle
+    document.getElementById('filtersToggle').addEventListener('click', () => {
+      const panel = document.getElementById('filtersPanel');
+      const btn = document.getElementById('filtersToggle');
+      panel.classList.toggle('open');
+      btn.classList.toggle('active');
+    });
+
+    // Sort
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      currentSort = e.target.value;
+      loadData();
+    });
+
+    // Price range
+    document.getElementById('maxPriceRange').addEventListener('input', (e) => {
+      maxPrice = e.target.value;
+      document.getElementById('maxPriceValue').textContent = `€${maxPrice}`;
+    });
+
+    document.getElementById('maxPriceRange').addEventListener('change', loadData);
+
+    // Discount range
+    document.getElementById('minDiscountRange').addEventListener('input', (e) => {
+      minDiscount = e.target.value;
+      document.getElementById('minDiscountValue').textContent = `${minDiscount}%`;
+    });
+
+    document.getElementById('minDiscountRange').addEventListener('change', loadData);
+
+    // Merchant select
+    document.getElementById('merchantSelect').addEventListener('change', (e) => {
+      currentMerchant = e.target.value;
+      loadData();
+    });
+
+    // ============================================
+    // INIT
+    // ============================================
+    loadData();
+
+    // Auto-refresh every 5 minutes
+    setInterval(loadData, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

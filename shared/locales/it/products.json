@@ -1,0 +1,17 @@
+{
+  "category": {
+    "all": "Tutti i Prodotti",
+    "clothing": "Abbigliamento",
+    "shoes": "Scarpe",
+    "accessories": "Accessori"
+  },
+  "brand": "Brand",
+  "price": "Prezzo",
+  "discount": "Sconto",
+  "available": "Disponibile",
+  "outOfStock": "Esaurito",
+  "newArrival": "Nuovo Arrivo",
+  "saleEnds": "L'offerta termina tra",
+  "freeShipping": "Spedizione Gratuita",
+  "limitedQuantity": "Quantità Limitata"
+}
